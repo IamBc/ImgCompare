@@ -57,16 +57,16 @@ SKImageComparer.prototype.Main = function() {
 // Download Image
 SKImageComparer.prototype.DownloadImage = function( siteURL, outputName ) {
    if ( siteURL === '' || siteURL === null ) {
-      app.log.error ( 'Empty or wrong input for URL: ', siteURL, 'skipping this URL');
+      this.log.error ( 'Empty or wrong input for URL: ', siteURL, 'skipping this URL');
       return;
    }
 
    this.webshot( siteURL, outputName, { shotSize: {height: "all", width: "all" } }, function(err) {
       if ( err !== null ) {
-         app.log.error( 'Could not create screenshot for: ', siteURL, err );
+         this.log.error( 'Could not create screenshot for: ', siteURL, err );
          process.exit();
       }
-   });
+   }.bind( this ));
 }
 
 
@@ -79,43 +79,27 @@ SKImageComparer.prototype.DownloadImages = function ( siteURLs, outputDir ) {
 
    // Check if directory exists. Create if doesn't exist, die if it is empty
    var fs=require('fs');
-   fs.exists( outputDir, function(exists){
-      if(exists){
-         var files = fs.readdirSync( outputDir );
-         if ( files.length > 0 ) {
-            app.log.error('There are already some files in directory: ' + outputDir  + '. Exiting.');
-            process.exit();
-         }
-      // dir exists and is empty, so files can be downloaded
-      
-         //Duplicated in the else should be in it's own function eventually
-         // Download images
-         for (var i = 0; i < siteURLs.length; i++ ) {
-            var outputFile = outputDir + '/' + i + app.imgExt;
-            app.log.debug( 'Downloading: ', siteURLs[i], ' to: ', outputFile );
-            app.DownloadImage( siteURLs[i], outputFile );
-         }
+   try {
+     fs.accessSync( outputDir );
+   } catch ( err ) {
+      // Directory doesn't exist, should be created
+      // TODO catch error
+      fs.mkdirSync( outputDir );
+   }
 
-      } else{
-      // dir doesn't exist, so must be created
-         try {
-            fs.mkdirSync( outputDir );
-            
-            // Duplicated in the IF should be in it's own function eventually
-            // Download images
-            for (var i = 0; i < siteURLs.length; i++ ) {
-               var outputFile = outputDir + '/' + i + app.imgExt;
-               app.log.debug( 'Downloading: ', siteURLs[i], ' to: ', outputFile );
-               app.DownloadImage( siteURLs[i], outputFile );
-            }
-         } catch(e) {
-            if ( e != null && e.code != 'EEXIST' ){ 
-               app.log.error( 'Could not create dir.', e );
-               process.exit();
-            }
-         }
-      }
-   });
+   // ValidaDirIsEmpty
+   var files = fs.readdirSync( outputDir );
+   if ( files.length > 0 ) {
+      this.log.error('There are already some files in directory: ' + outputDir  + '. Exiting.');
+      process.exit();
+   }
+
+   // Download Files
+   for (var i = 0; i < siteURLs.length; i++ ) {
+      var outputFile = outputDir + '/' + i + this.imgExt;
+      this.log.debug( 'Downloading: ', siteURLs[i], ' to: ', outputFile );
+      this.DownloadImage( siteURLs[i], outputFile );
+   }
 }
 
 // Diff Image
@@ -126,7 +110,7 @@ SKImageComparer.prototype.DiffImage = function ( actualImg, expectedImg, diffImg
       diffImage: diffImg,
    }, function (err, result) {
       if ( err !== null ) {
-         app.log.error( 'Could not diff images: ', actualImg, ' and ', expectedImg, " error: ", err );
+         this.log.error( 'Could not diff images: ', actualImg, ' and ', expectedImg, " error: ", err );
          process.exit();
       }
       if ( result.percentage > 0 ) {
@@ -135,10 +119,10 @@ SKImageComparer.prototype.DiffImage = function ( actualImg, expectedImg, diffImg
          var r = /\d+/;
          var idx = filename.match(r);
 
-         app.log.error('Screenshots from: ', app.actualURLs[idx], ' and ',app.expectedURLs[idx] , ' are different. actual image: '+ actualImg+ ' tested image: '+ expectedImg, ' diff image:' ); 
+         this.log.error('Screenshots from: ', this.actualURLs[idx], ' and ',this.expectedURLs[idx] , ' are different. actual image: '+ actualImg+ ' tested image: '+ expectedImg, ' diff image:' ); 
       }
       // TODO write total stat
-   });
+   }.bind( this ));
 }
 
 SKImageComparer.prototype.DiffImages = function ( actualImgDir, expectedImgDir ) {
