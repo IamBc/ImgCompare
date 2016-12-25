@@ -1,7 +1,7 @@
 "use strict";
 
 // Constructor
-var SKImageComparer = function (){
+var ImageComparer = function (){
    var log4js = require('log4js');
    this.log = log4js.getLogger();
 
@@ -15,7 +15,7 @@ var SKImageComparer = function (){
    this.reportDir = 'report_dir';
 };
 
-SKImageComparer.prototype.Main = function() {
+ImageComparer.prototype.Main = function() {
    // Parse CMD params
    var commander = require('commander');
    commander
@@ -54,8 +54,9 @@ SKImageComparer.prototype.Main = function() {
    }
 }
 
+
 // Download Image
-SKImageComparer.prototype.DownloadImage = function( siteURL, outputName ) {
+ImageComparer.prototype.DownloadImage = function( siteURL, outputName ) {
    if ( siteURL === '' || siteURL === null ) {
       this.log.error ( 'Empty or wrong input for URL: ', siteURL, 'skipping this URL');
       return;
@@ -71,7 +72,7 @@ SKImageComparer.prototype.DownloadImage = function( siteURL, outputName ) {
 
 
 // DownloadMultipleImages
-SKImageComparer.prototype.DownloadImages = function ( siteURLs, outputDir ) {
+ImageComparer.prototype.DownloadImages = function ( siteURLs, outputDir ) {
    if ( siteURLs == null || outputDir == null ) {
       this.log.error( 'Wrong input!' );
       process.exit();
@@ -103,7 +104,7 @@ SKImageComparer.prototype.DownloadImages = function ( siteURLs, outputDir ) {
 }
 
 // Diff Image
-SKImageComparer.prototype.DiffImage = function ( actualImg, expectedImg, diffImg ) {
+ImageComparer.prototype.DiffImage = function ( actualImg, expectedImg, diffImg ) {
    this.imageDiff.getFullResult({
       actualImage: actualImg,
       expectedImage: expectedImg,
@@ -125,7 +126,7 @@ SKImageComparer.prototype.DiffImage = function ( actualImg, expectedImg, diffImg
    }.bind( this ));
 }
 
-SKImageComparer.prototype.DiffImages = function ( actualImgDir, expectedImgDir ) {
+ImageComparer.prototype.DiffImages = function ( actualImgDir, expectedImgDir ) {
    // TODO check both dirs exist
 
    var actualFiles = this.getFilesInDir( actualImgDir );
@@ -140,17 +141,17 @@ SKImageComparer.prototype.DiffImages = function ( actualImgDir, expectedImgDir )
    }
 } 
 
-SKImageComparer.prototype.getFilesInDir = function ( dir ) {
+ImageComparer.prototype.getFilesInDir = function ( dir ) {
    var fs=require('fs');
    var files = fs.readdirSync( dir );
    return files; 
 }
 
-SKImageComparer.prototype.getSiteURLsFromFile = function ( filePath ) {
+ImageComparer.prototype.getSiteURLsFromFile = function ( filePath ) {
    var fs = require('fs');
    return fs.readFileSync( filePath ).toString().split("\n");
 }
 
 
-var app = new SKImageComparer();
+var app = new ImageComparer();
 app.Main();
