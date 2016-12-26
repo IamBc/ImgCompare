@@ -15,26 +15,26 @@ var ImageComparer = function (){
    this.reportDir = 'report_dir';
 };
 
-ImageComparer.prototype.Main = function() {
-   this.ExecuteCommandFromCmdParams();
+ImageComparer.prototype.main = function() {
+   this.executeCommandFromCmdParams();
 }
 
-ImageComparer.prototype.ExecuteCommandFromCmdParams = function () {
+ImageComparer.prototype.executeCommandFromCmdParams = function () {
    // Object containing the cmd parameters
-   var cmdArgs = this.GetCMDArgs();
+   var cmdArgs = this.getCMDArgs();
 
    var siteURLs = this.getSiteURLsFromFile( cmdArgs.urlsFilePath );
-   if ( this.ShouldCompareScreenshots( cmdArgs ) ) {
+   if ( this.shouldcompareScreenshots( cmdArgs ) ) {
       this.screenshotedURLs = siteURLs; // Used for detailed logging
-      this.CompareScreenshots( cmdArgs.originalScreenshotDir, cmdArgs.currentScreenshotDir );
-   } else if ( this.ShouldTakeScreenshots( cmdArgs) ) {
-      this.ScreenshotSites( siteURLs, cmdArgs.screenshotDir );
+      this.compareScreenshots( cmdArgs.originalScreenshotDir, cmdArgs.currentScreenshotDir );
+   } else if ( this.shouldTakeScreenshots( cmdArgs) ) {
+      this.screenshotSites( siteURLs, cmdArgs.screenshotDir );
    } else {
       this.log.fatal( 'You \'ve called this utility with bad parameters.' );
    } 
 }
 
-ImageComparer.prototype.GetCMDArgs = function () {
+ImageComparer.prototype.getCMDArgs = function () {
    var commander = require('commander');
    commander
    .version('0.0.1')
@@ -54,19 +54,19 @@ ImageComparer.prototype.GetCMDArgs = function () {
 ImageComparer.prototype.getSiteURLsFromFile = function ( filePath ) {
    var fs = require('fs');
    var siteURLs = fs.readFileSync( filePath )
-               .toString()
-               .split("\n");
+                     .toString()
+                     .split("\n");
    return siteURLs;
 }
 
-ImageComparer.prototype.ShouldTakeScreenshots = function ( cmdArgs ) {
+ImageComparer.prototype.shouldTakeScreenshots = function ( cmdArgs ) {
    return cmdArgs.screenshotDir !== undefined
           && cmdArgs.screenshotDir !== ''
           && cmdArgs.urlsFilePath !== undefined
           && cmdArgs.urlsFilePath !== '';
 }
 
-ImageComparer.prototype.ShouldCompareScreenshots = function ( cmdArgs ) {
+ImageComparer.prototype.shouldcompareScreenshots = function ( cmdArgs ) {
    return cmdArgs.originalScreenshotDir !== undefined
           && cmdArgs.originalScreenshotDir !== ''
           && cmdArgs.currentScreenshotDir !== undefined
@@ -75,12 +75,12 @@ ImageComparer.prototype.ShouldCompareScreenshots = function ( cmdArgs ) {
           && cmdArgs.urlsFilePath !== '';
 }
 
-ImageComparer.prototype.CompareScreenshots = function ( originalScreenshotDir, currentScreenshotDir ) {
+ImageComparer.prototype.compareScreenshots = function ( originalScreenshotDir, currentScreenshotDir ) {
    // TODO check both dtirs exist
    var fileNames = this.getFileNamesFromDir( originalScreenshotDir );
    for (var fileName in fileNames ) {
-      this.CompareScreenshot( this.GetFilePath( originalScreenshotDir, fileName ),
-                      this.GetFilePath( currentScreenshotDir, fileName ) );
+      this.compareScreenshot( this.getFilePath( originalScreenshotDir, fileName ),
+                              this.getFilePath( currentScreenshotDir, fileName ) );
    }
 } 
 
@@ -94,11 +94,11 @@ ImageComparer.prototype.getFileNamesFromDir = function ( dirPath ) {
    return filePaths; 
 }
 
-ImageComparer.prototype.GetFilePath = function ( ScreenshotDir, fileName ) {
+ImageComparer.prototype.getFilePath = function ( ScreenshotDir, fileName ) {
    return ScreenshotDir + '/' + fileName + this.imgExt;
 }
 
-ImageComparer.prototype.CompareScreenshot = function ( originalImgPath, currentImgPath ) {
+ImageComparer.prototype.compareScreenshot = function ( originalImgPath, currentImgPath ) {
    this.imageDiff.getFullResult({
       actualImage: originalImgPath,
       expectedImage: currentImgPath,
@@ -110,39 +110,39 @@ ImageComparer.prototype.CompareScreenshot = function ( originalImgPath, currentI
       
       var ImagesAreDifferent = result.percentage > 0;
       if ( ImagesAreDifferent ) {
-         this.log.error('Difference: ' + this.GetScreenshotSourceURL( originalImgPath ) + ' ' + originalImg + ' tested image: ' + currentImg + ' diff image:' ); 
+         this.log.error('Difference: ' + this.getScreenshoutSourceURL( originalImgPath ) + ' ' + originalImgPath + ' tested image: ' + currentImgPath + ' diff image:' ); 
       }
       // TODO write total stat
    }.bind( this ));
 }
 
-ImageComparer.prototype.GetScreenshotSourceURL = function ( originalImgPath ) {
-   var filename = originalImg.split("/").pop();
+ImageComparer.prototype.getScreenshoutSourceURL = function ( originalImgPath ) {
+   var filename = originalImgPath.split("/").pop();
    var r = /\d+/;
    var idx = filename.match(r);
    return this.screenshotedURLs[idx]
 }
 
-ImageComparer.prototype.ScreenshotSites = function ( siteURLs, outputDir ) {
+ImageComparer.prototype.screenshotSites = function ( siteURLs, outputDir ) {
    if ( siteURLs == null || outputDir == null ) {
       this.log.error( 'Wrong input!' );
       process.exit();
    }
 
-   this.CreateDirIfNotExists();
+   this.createDirIfNotExists();
 
    // If there are files, we shouldn't override them, end execution
-   if ( this.DirHasFiles( outputDir ) ) {
+   if ( this.dirHasFiles( outputDir ) ) {
       this.log.error('There are already some files in directory: ' + outputDir  + '. Exiting.');
       process.exit();
    }
 
    for (var i = 0; i < siteURLs.length; i++ ) {
-      this.ScreenshotSite( siteURLs[i], GetFilePath( outputDir, i ) );
+      this.screenshotSite( siteURLs[i], getFilePath( outputDir, i ) );
    }
 }
 
-ImageComparer.prototype.CreateDirIfNotExists = function ( dirPath ) {
+ImageComparer.prototype.createDirIfNotExists = function ( dirPath ) {
    var fs=require('fs');
    try {
       fs.accessSync( dirPath );
@@ -152,12 +152,12 @@ ImageComparer.prototype.CreateDirIfNotExists = function ( dirPath ) {
    }
 } 
 
-ImageComparer.prototype.DirHasFiles = function ( dirPath ) {
+ImageComparer.prototype.dirHasFiles = function ( dirPath ) {
    var files = fs.readdirSync( dirPath );
    return files.length > 0;
 }
 
-ImageComparer.prototype.ScreenshotSite = function( siteURL, outputName ) {
+ImageComparer.prototype.screenshotSite = function( siteURL, outputName ) {
    // Check arguments
    if ( siteURL === '' || siteURL === null ) {
       this.log.error ( 'Empty or wrong input for URL: ', siteURL, 'skipping this URL');
@@ -175,4 +175,4 @@ ImageComparer.prototype.ScreenshotSite = function( siteURL, outputName ) {
 }
 
 var app = new ImageComparer();
-app.Main();
+app.main();
